@@ -37,10 +37,14 @@ const Saves = {
           enemyDifficulty: Draft.state.enemyDifficulty,
           playerPieces: Draft.state.playerPieces,
           collection: Draft.state.collection,
+          runEvent: Draft.state.runEvent || null,
+          eventAppliedRound: Draft.state.eventAppliedRound || 0,
         },
         gold: GoldSystem.gold,
         relics: RelicSystem.owned,
         codexSeen: Array.from(Codex.seen),
+        runSeed: (typeof RunRNG !== 'undefined') ? RunRNG.getSeed() : null,
+        runRngState: (typeof RunRNG !== 'undefined') ? RunRNG.getState() : null,
       };
       localStorage.setItem(this.SAVE_KEY, JSON.stringify(data));
       return true;
@@ -82,6 +86,10 @@ const Saves = {
   },
 
   applyLoad(data) {
+    if (typeof RunRNG !== 'undefined') {
+      RunRNG.restore(data.runSeed || String(data.timestamp || Date.now()), data.runRngState);
+    }
+
     // Restore Draft state
     Draft.state.round = data.draft.round;
     Draft.state.lives = data.draft.lives;
@@ -89,6 +97,8 @@ const Saves = {
     Draft.state.enemyDifficulty = data.draft.enemyDifficulty;
     Draft.state.playerPieces = data.draft.playerPieces;
     Draft.state.collection = data.draft.collection;
+    Draft.state.runEvent = data.draft.runEvent || null;
+    Draft.state.eventAppliedRound = data.draft.eventAppliedRound || 0;
 
     // Restore Gold
     GoldSystem.gold = data.gold || 0;
@@ -124,9 +134,10 @@ const Saves = {
     sfxVolume: 0.6,
     musicEnabled: true,
     sfxEnabled: true,
-    language: 'en',
+    language: 'auto',
     aiDifficulty: 2,
     showCoordinates: true,
+    showThreatMap: false,
     animationSpeed: 'normal',
   },
 

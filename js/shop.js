@@ -33,11 +33,7 @@ const Shop = {
       pieces.forEach(pt => allSpecial.push({ pt, cat }));
     });
 
-    // Shuffle
-    for (let i = allSpecial.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [allSpecial[i], allSpecial[j]] = [allSpecial[j], allSpecial[i]];
-    }
+    RunRNG.shuffle(allSpecial);
 
     const current = [...Draft.state.playerPieces.pawns, ...Draft.state.playerPieces.back];
 
@@ -74,7 +70,7 @@ const Shop = {
   _findReplaceSlot(pt, cat) {
     if (cat === 'pawn') {
       const idx = Draft.state.playerPieces.pawns.findIndex(p => p === PT.PAWN);
-      return idx >= 0 ? idx : Math.floor(Math.random() * 8);
+      return idx >= 0 ? idx : RunRNG.int(8);
     }
     const slotMap = { rook: [0,7], knight: [1,6], bishop: [2,5], queen: [3], king: [4] };
     const slots = slotMap[cat] || [];
@@ -121,6 +117,7 @@ const Shop = {
 
     GoldSystem.spend(relic.cost);
     RelicSystem.add(id);
+    if (typeof Progression !== 'undefined') Progression.onRelicBought();
     Music.playSFX('purchase');
 
     // Remove from current relics

@@ -197,10 +197,10 @@ const ChessAI = {
     const result = this.minimax(board, gameState, depth, -Infinity, Infinity, true, aiTeam);
 
     // Add some randomness for easy difficulty
-    if (difficulty === 1 && Math.random() < 0.3) {
+    if (difficulty === 1 && RunRNG.chance(0.3)) {
       const allMoves = this.getAllMoves(board, gameState, aiTeam);
       if (allMoves.length > 0) {
-        return allMoves[Math.floor(Math.random() * allMoves.length)];
+        return allMoves[RunRNG.int(allMoves.length)];
       }
     }
 

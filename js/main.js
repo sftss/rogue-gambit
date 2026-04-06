@@ -1,6 +1,14 @@
 // ==================== MAIN ENTRY POINT ====================
 
 window.addEventListener('DOMContentLoaded', () => {
+  let optionsReturnScreen = 'title';
+
+  const detectPreferredLanguage = () => {
+    const lang = ((navigator.languages && navigator.languages[0]) || navigator.language || 'en').toLowerCase();
+    if (lang.startsWith('fr')) return 'fr';
+    return 'en';
+  };
+
   // Init audio on first interaction
   document.addEventListener('click', () => Music.init(), { once: true });
   document.addEventListener('keydown', () => Music.init(), { once: true });
@@ -10,12 +18,24 @@ window.addEventListener('DOMContentLoaded', () => {
   Music.setVolume(settings.musicVolume);
   if (!settings.musicEnabled) Music.toggle();
   if (!settings.sfxEnabled) Music.toggleSFX();
+  Renderer.setDisplayOptions({
+    showCoordinates: settings.showCoordinates !== false,
+    showThreatMap: settings.showThreatMap !== false,
+  });
 
   const updateAudioToggleLabels = () => {
     const musicBtn = document.getElementById('opt-music-toggle');
     const sfxBtn = document.getElementById('opt-sfx-toggle');
     if (musicBtn) musicBtn.textContent = Music.isMuted ? I18n.t('common.off') : I18n.t('common.on');
     if (sfxBtn) sfxBtn.textContent = Music.isSFXMuted ? I18n.t('common.off') : I18n.t('common.on');
+  };
+
+  const updateGameplayToggleLabels = () => {
+    const settingsNow = Saves.loadSettings();
+    const coordsBtn = document.getElementById('opt-coords');
+    const threatsBtn = document.getElementById('opt-threats');
+    if (coordsBtn) coordsBtn.textContent = settingsNow.showCoordinates === false ? I18n.t('common.off') : I18n.t('common.on');
+    if (threatsBtn) threatsBtn.textContent = settingsNow.showThreatMap === false ? I18n.t('common.off') : I18n.t('common.on');
   };
 
   const updateLanguageButtons = () => {
@@ -28,9 +48,11 @@ window.addEventListener('DOMContentLoaded', () => {
     const shouldRerender = rerenderScreens !== false;
     I18n.applyToDOM();
     updateAudioToggleLabels();
+    updateGameplayToggleLabels();
     updateLanguageButtons();
     GoldSystem.updateDisplay();
     RelicSystem.updateDisplay();
+    if (typeof Progression !== 'undefined') Progression.renderTitlePanel();
 
     if (!shouldRerender) return;
 
@@ -64,7 +86,10 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   // Initialize language before first render
-  I18n.setLanguage(settings.language || 'en', { persist: false, apply: false });
+  const startupLanguage = (!settings.language || settings.language === 'auto')
+    ? detectPreferredLanguage()
+    : settings.language;
+  I18n.setLanguage(startupLanguage, { persist: false, apply: false });
   refreshLocalizedRuntimeUI(false);
 
   // ── TITLE SCREEN ──
@@ -87,7 +112,16 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('btn-options').addEventListener('click', () => {
+    optionsReturnScreen = 'title';
     Game.showScreen('options');
+  });
+
+  document.getElementById('btn-tutorial').addEventListener('click', () => {
+    Tutorial.start(true);
+  });
+
+  document.getElementById('btn-patchnotes').addEventListener('click', () => {
+    Game.showScreen('patchnotes');
   });
 
   // ── DRAFT SCREEN ──
@@ -154,6 +188,14 @@ window.addEventListener('DOMContentLoaded', () => {
     Codex.show('game');
   });
 
+  const gameOptionsBtn = document.getElementById('btn-game-options');
+  if (gameOptionsBtn) {
+    gameOptionsBtn.addEventListener('click', () => {
+      optionsReturnScreen = 'game';
+      Game.showScreen('options');
+    });
+  }
+
   // ── CODEX SCREEN ──
   document.getElementById('codex-back').addEventListener('click', () => {
     Codex.back();
@@ -172,7 +214,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // ── OPTIONS SCREEN ──
   document.getElementById('options-back').addEventListener('click', () => {
-    Game.showScreen('title');
+    if (optionsReturnScreen === 'game') {
+      Game.showScreen('game');
+      if (Game.state) Game.updateUI();
+      return;
+    }
+    Game.showTitle();
+  });
+
+  document.getElementById('patchnotes-back').addEventListener('click', () => {
     Game.showTitle();
   });
 
@@ -234,6 +284,30 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  document.getElementById('opt-coords').addEventListener('click', (e) => {
+    const s = Saves.loadSettings();
+    s.showCoordinates = !(s.showCoordinates !== false);
+    Saves.saveSettings(s);
+    Renderer.setDisplayOptions({ showCoordinates: s.showCoordinates !== false });
+    e.target.textContent = s.showCoordinates === false ? I18n.t('common.off') : I18n.t('common.on');
+  });
+
+  document.getElementById('opt-threats').addEventListener('click', (e) => {
+    const s = Saves.loadSettings();
+    s.showThreatMap = !(s.showThreatMap !== false);
+    Saves.saveSettings(s);
+    Renderer.setDisplayOptions({ showThreatMap: s.showThreatMap !== false });
+    e.target.textContent = s.showThreatMap === false ? I18n.t('common.off') : I18n.t('common.on');
+  });
+
+  document.getElementById('tutorial-prev').addEventListener('click', () => Tutorial.prev());
+  document.getElementById('tutorial-next').addEventListener('click', () => Tutorial.next());
+  document.getElementById('tutorial-skip').addEventListener('click', () => Tutorial.close());
+
+  window.addEventListener('beforeunload', () => {
+    Saves.save();
+  });
+
   // ── GAME OVER SCREEN ──
   document.getElementById('gameover-continue').addEventListener('click', () => {
     const won = Game.state.winner === TEAM.WHITE;
@@ -256,8 +330,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // ── INIT ──
   updateAudioToggleLabels();
+  updateGameplayToggleLabels();
   updateLanguageButtons();
+  if (typeof Progression !== 'undefined') Progression.renderTitlePanel();
   Game.showTitle();
+  if (typeof Tutorial !== 'undefined' && !Tutorial.hasSeen()) {
+    setTimeout(() => Tutorial.start(), 350);
+  }
   // Unlock standard pieces in codex
   ['pawn','rook','bishop','knight','queen','king'].forEach(t => Codex.unlock(t));
 });

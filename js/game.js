@@ -17,6 +17,7 @@ const Game = {
   showTitle() {
     this.showScreen('title');
     Music.play('title');
+    if (typeof Progression !== 'undefined') Progression.renderTitlePanel();
     // Show/hide continue button
     const continueBtn = document.getElementById('btn-continue');
     if (continueBtn) {
@@ -42,11 +43,14 @@ const Game = {
 
   // ============ START NEW RUN ============
   startRun() {
+    const seed = RunRNG.initNewRun();
+    if (typeof Progression !== 'undefined') Progression.onRunStart(seed);
     Draft.init();
     GoldSystem.reset();
     RelicSystem.reset();
     RelicSystem.resetResurrection();
     Saves.deleteSave();
+    Saves.save();
     this.showDraft();
   },
 
@@ -55,6 +59,7 @@ const Game = {
     const data = Saves.load();
     if (!data) { this.startRun(); return; }
     Saves.applyLoad(data);
+    if (typeof Progression !== 'undefined') Progression.renderTitlePanel();
     this.showDraft();
   },
 
@@ -65,6 +70,7 @@ const Game = {
     Draft.generateOffers(6);
     Draft.render();
     this._updateShopBoardPreview('draft-board-preview');
+    Saves.save();
   },
 
   _updateShopBoardPreview(canvasId) {
@@ -85,6 +91,13 @@ const Game = {
     this.board = createCustomBoard(playerSetup, enemySetup);
     this.state = createGameState();
     this.state.battleGoldEarned = 0;
+    this.state.runSeed = RunRNG.getSeed();
+    this.state.boss = Draft.getCurrentBoss();
+
+    if (this.state.boss) {
+      this.addLog(`${this.state.boss.name} enters the battlefield!`, 'danger');
+      this._applyBossModifier(this.state.boss);
+    }
 
     // Handle start-of-game effects
     this.handleGameStartEffects();
@@ -119,9 +132,35 @@ const Game = {
     GoldSystem.updateDisplay();
     this.updateUI();
     this.addLog(I18n.t('game.log.roundStarted', { round: Draft.state.round }));
+    Saves.save();
 
     if (this.state.currentTeam === TEAM.BLACK) {
       setTimeout(() => this.doAITurn(), 500);
+    }
+  },
+
+  _applyBossModifier(boss) {
+    if (!boss) return;
+
+    if (boss.modifier === 'frost') {
+      const candidates = findAllPieces(this.board, p => p.team === TEAM.WHITE && PIECE_CATEGORY[p.type] === 'pawn');
+      if (candidates.length > 0 && RunRNG.chance(0.6)) {
+        const target = candidates[RunRNG.int(candidates.length)];
+        target.piece.frozen = true;
+      }
+    } else if (boss.modifier === 'legion') {
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const p = this.board[r][c];
+          if (p && p.team === TEAM.BLACK && PIECE_CATEGORY[p.type] === 'pawn') {
+            p.killCount = (p.killCount || 0) + 1;
+          }
+        }
+      }
+    } else if (boss.modifier === 'cataclysm') {
+      if (RunRNG.chance(0.5)) {
+        this.state.currentTeam = TEAM.BLACK;
+      }
     }
   },
 
@@ -145,7 +184,7 @@ const Game = {
 
         if (p.type === PT.PINATA) {
           const options = [PT.PAWN, PT.ROOK, PT.BISHOP, PT.KNIGHT, PT.QUEEN];
-          p.type = options[Math.floor(Math.random() * options.length)];
+          p.type = options[RunRNG.int(options.length)];
         }
       }
     }
@@ -388,6 +427,7 @@ const Game = {
   // ── Gold on capture ────────────────────────────
   _onCapture(attacker, captured) {
     attacker.killCount = (attacker.killCount || 0) + 1;
+    if (typeof Progression !== 'undefined') Progression.onCapture();
     let gold = 0;
     // Blood money: any capture
     gold += RelicSystem.applyOnCapture(attacker, captured, this.board, this.state);
@@ -463,7 +503,7 @@ const Game = {
     const team = bankerPiece.team;
     const pawns = findAllPieces(this.board, p => p.team === team && p.type === PT.PAWN);
     if (pawns.length > 0) {
-      const target = pawns[Math.floor(Math.random() * pawns.length)];
+      const target = pawns[RunRNG.int(pawns.length)];
       target.piece.type = PT.GOLDEN_PAWN;
       Renderer.spawnPromotionEffect(target.row, target.col);
       this.addLog(I18n.t('game.log.bankerGolden'), 'important');
@@ -520,7 +560,7 @@ const Game = {
       }
     });
     if (targets.length > 0) {
-      const target = targets[Math.floor(Math.random() * targets.length)];
+      const target = targets[RunRNG.int(targets.length)];
       const zapped = removePiece(this.board, target.row, target.col, this.state);
       if (zapped) { Renderer.spawnCaptureEffect(target.row, target.col, '#ff0'); Music.playSFX('electric'); this.addLog(I18n.t('game.log.electroZaps', { target: I18n.pieceName(zapped.type) }), 'important'); }
     }
@@ -648,6 +688,7 @@ const Game = {
     updateAristocratStatus(this.board, this.state);
     this.updateUI();
     this.checkGameEnd();
+    Saves.save();
 
     if (!this.state.gameOver && this.state.currentTeam === TEAM.BLACK) {
       setTimeout(() => this.doAITurn(), 400);
@@ -702,6 +743,9 @@ const Game = {
   showGameOver() {
     const won = this.state.winner === TEAM.WHITE;
     const lost = this.state.winner === TEAM.BLACK;
+    const completedRound = Draft.state.round;
+    const bossDefeated = !!(won && Draft.isBossRound && Draft.isBossRound(completedRound));
+    let runEnded = false;
 
     const resultEl = document.getElementById('gameover-result');
     const detailsEl = document.getElementById('gameover-details');
@@ -720,12 +764,14 @@ const Game = {
         Draft.state.lives = Math.max(Draft.state.lives, 1);
       } else {
         Draft.loseRound();
+        runEnded = Draft.isGameOver();
       }
     } else {
       resultEl.textContent = I18n.t('gameover.draw'); resultEl.className = 'draw';
     }
 
-    detailsEl.textContent = this.state.winReason;
+    const defeatHint = lost ? this._buildDefeatAnalysis() : '';
+    detailsEl.textContent = defeatHint ? `${this.state.winReason} ${defeatHint}` : this.state.winReason;
 
     // Stats
     statsEl.innerHTML = `
@@ -738,6 +784,17 @@ const Game = {
 
     this.showScreen('gameover');
 
+    if (typeof Progression !== 'undefined') {
+      Progression.onBattleEnd({
+        won,
+        round: completedRound,
+        runEnded,
+        bossDefeated,
+      });
+    }
+
+    Saves.save();
+
     const continueBtn = document.getElementById('gameover-continue');
     if (won) {
       continueBtn.textContent = I18n.t('gameover.goToShop'); continueBtn.style.display = 'block';
@@ -746,6 +803,23 @@ const Game = {
     } else {
       continueBtn.style.display = 'none';
     }
+  },
+
+  _buildDefeatAnalysis() {
+    const enemyCaptures = this.state?.capturedPieces?.black?.length || 0;
+    const yourLosses = this.state?.capturedPieces?.white?.length || 0;
+    const underCheck = PieceMoves.isInCheck(TEAM.WHITE, this.board, this.state);
+
+    if (underCheck && yourLosses > enemyCaptures + 2) {
+      return 'Hint: your king was under sustained pressure. Stabilize king safety before counter-attacking.';
+    }
+    if (yourLosses >= enemyCaptures + 4) {
+      return 'Hint: avoid losing tempo with forced trades. Protect high-value pieces and regroup.';
+    }
+    if (enemyCaptures <= 2) {
+      return 'Hint: push for more tactical captures to gain gold and momentum.';
+    }
+    return 'Hint: close game. Lean on relic synergies and the threat map for cleaner turns.';
   },
 
   // ============ UI UPDATES ============

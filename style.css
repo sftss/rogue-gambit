@@ -33,6 +33,58 @@ body {
 .save-info { font-size: 8px; color: #4a3a60; text-align: center; }
 .title-footer { font-size: 7px; color: #2a1a40; margin-top: 20px; }
 
+.profile-panel {
+  width: 100%;
+  max-width: 740px;
+  background: #130f1d;
+  border: 2px solid #2a1a40;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.profile-title { font-size: 8px; color: #ffd040; letter-spacing: 2px; }
+.profile-section-title { font-size: 7px; color: #8a7aa0; margin-top: 6px; }
+.profile-stats { display: flex; gap: 8px; flex-wrap: wrap; }
+.profile-chip {
+  background: #1d172b;
+  border: 1px solid #3a2a50;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 110px;
+}
+.profile-chip span { font-size: 6px; color: #8a7aa0; }
+.profile-chip strong { font-size: 10px; color: #ffd040; }
+.profile-missions { display: flex; flex-wrap: wrap; gap: 6px; }
+.profile-mission {
+  font-size: 7px;
+  color: #b8a8d0;
+  background: #1c1429;
+  border: 1px solid #3a2a50;
+  padding: 4px 6px;
+}
+.profile-mission.done {
+  color: #9fe89f;
+  border-color: #3f7a3f;
+  background: #102110;
+}
+.profile-achievements { display: flex; flex-wrap: wrap; gap: 6px; }
+.profile-achievement {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border: 1px solid #3a2a50;
+  padding: 6px;
+  width: calc(50% - 3px);
+  background: #160f22;
+}
+.profile-achievement b { font-size: 7px; }
+.profile-achievement span { font-size: 6px; color: #8a7aa0; line-height: 1.6; }
+.profile-achievement.unlocked b { color: #ffd040; }
+.profile-achievement.locked { opacity: 0.6; }
+
 /* ============ BUTTONS ============ */
 .btn {
   font-family: 'Press Start 2P', 'Courier New', monospace;
@@ -82,6 +134,19 @@ body {
 .draft-picks-hint { font-size: 7px; color: #6858a0; }
 #draft-picks { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 #draft-info { font-size: 8px; color: #6858a0; margin-bottom: 10px; text-align: center; }
+.run-seed-display { font-size: 7px; color: #7c6ba0; margin-bottom: 8px; text-align: center; }
+.draft-event {
+  width: 100%;
+  max-width: 760px;
+  background: #161122;
+  border: 2px solid #3a2a50;
+  padding: 10px;
+  margin-bottom: 12px;
+}
+.draft-event-title { font-size: 8px; color: #ffd040; margin-bottom: 6px; }
+.draft-event-desc { font-size: 7px; color: #b8a8d0; line-height: 1.8; margin-bottom: 8px; }
+.draft-event-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.draft-event-result { margin-top: 8px; font-size: 7px; color: #9fe89f; }
 
 /* ============ DRAFT / SHOP CARDS ============ */
 .draft-card, .shop-card {
@@ -203,6 +268,36 @@ body {
 .option-choice.active { background: #2a2010; border-color: #806020; color: #ffd040; }
 .option-danger { border-color: #4a1a1a; }
 
+/* ============ PATCH NOTES ============ */
+.patchnotes-body {
+  width: 100%;
+  max-width: 780px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.patchnote-block {
+  background: #1a1228;
+  border: 2px solid #2a1a40;
+  padding: 14px;
+}
+.patchnote-title {
+  font-size: 9px;
+  color: #ffd040;
+  margin-bottom: 8px;
+}
+.patchnote-block ul {
+  margin-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.patchnote-block li {
+  font-size: 8px;
+  color: #b8a8d0;
+  line-height: 1.7;
+}
+
 /* ============ PROMOTION MODAL ============ */
 #promotion-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center; }
 #promotion-modal.active { display: flex; }
@@ -229,6 +324,37 @@ body {
 .tooltip { position: fixed; background: #1a1228; border: 2px solid #4a3a60; padding: 10px 14px; font-size: 7px; color: #c8c0d8; line-height: 2; pointer-events: none; z-index: 200; max-width: 220px; }
 .tooltip .tt-name { color: #ffd040; font-size: 9px; margin-bottom: 4px; }
 
+/* ============ TUTORIAL ============ */
+.tutorial-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(5, 5, 10, 0.78);
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.tutorial-overlay.active { display: flex; }
+.tutorial-card {
+  width: 100%;
+  max-width: 540px;
+  background: #1a1228;
+  border: 3px solid #4a3a60;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tutorial-title { font-size: 10px; color: #ffd040; }
+.tutorial-body { font-size: 8px; color: #c8c0d8; line-height: 1.9; }
+.tutorial-progress { font-size: 7px; color: #8a7aa0; }
+.tutorial-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.tutorial-focus {
+  outline: 3px solid rgba(255, 208, 64, 0.8);
+  outline-offset: 2px;
+}
+
 /* ============ SCROLLBAR ============ */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #0a0a12; }
@@ -239,9 +365,14 @@ body {
 @media (max-width: 700px) {
   #game-main { flex-direction: column; align-items: center; }
   #game-sidebar { width: 100%; max-width: 512px; }
+  #board-canvas, #effects-canvas {
+    width: min(94vw, 512px);
+    height: min(94vw, 512px);
+  }
   #codex-body { flex-direction: column; }
   #codex-list { width: 100%; flex-direction: row; flex-wrap: wrap; max-height: 160px; }
   .codex-entry { width: 80px; flex-direction: column; }
   #shop-body { flex-direction: column; }
   #shop-right { width: 100%; }
+  .profile-achievement { width: 100%; }
 }

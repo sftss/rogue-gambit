@@ -34,7 +34,7 @@ const RelicSystem = {
         p.team === TEAM.WHITE && p.type === PT.PAWN
       );
       if (pawns.length > 0) {
-        const target = pawns[Math.floor(Math.random() * pawns.length)];
+        const target = pawns[RunRNG.int(pawns.length)];
         target.piece.type = PT.GOLDEN_PAWN;
       }
     }
@@ -159,11 +159,7 @@ const RelicSystem = {
       }
     });
 
-    // Shuffle weighted pool
-    for (let i = pool.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [pool[i], pool[j]] = [pool[j], pool[i]];
-    }
+    RunRNG.shuffle(pool);
 
     // Deduplicate
     const seen = new Set();

@@ -200,7 +200,7 @@ const RELICS = {
     desc: 'Horde Mother spawns 2 hordelings per capture instead of 1.',
     flavor: '"They come in waves."',
     icon: '\ud83d\udc1d',
-    cost: 4,
+    cost: 5,
     rarity: 'uncommon',
   },
   blessed_blade: {
@@ -254,7 +254,7 @@ const RELICS = {
     desc: 'Gain +3 gold at the start of each shop visit.',
     flavor: '"The house always wins. Today, you are the house."',
     icon: '\ud83d\udcb0',
-    cost: 3,
+    cost: 4,
     rarity: 'common',
   },
   warchief: {
@@ -272,7 +272,7 @@ const RELICS = {
     desc: 'Once per run, when you would lose a life, lose nothing instead.',
     flavor: '"Death is a door. This is the key."',
     icon: '\ud83d\udc8e',
-    cost: 8,
+    cost: 7,
     rarity: 'rare',
   },
   tacticians_manual: {
@@ -281,8 +281,8 @@ const RELICS = {
     desc: 'Enemy AI difficulty is reduced by 1 level.',
     flavor: '"Know thine enemy. Memorize their playbook."',
     icon: '\ud83d\udcda',
-    cost: 5,
-    rarity: 'uncommon',
+    cost: 6,
+    rarity: 'rare',
   },
   warp_beacon: {
     id: 'warp_beacon',
@@ -299,7 +299,7 @@ const RELICS = {
     desc: 'Once per battle, your King (or Rocketman) may move 2 squares instead of 1.',
     flavor: '"The crown commands. Barriers obey."',
     icon: '\ud83d\udc51',
-    cost: 5,
+    cost: 4,
     rarity: 'uncommon',
   },
   blood_money: {
@@ -308,7 +308,7 @@ const RELICS = {
     desc: 'Earn 1 gold for every enemy piece you capture (standard + special).',
     flavor: '"Every life has a price. Every kill, a payout."',
     icon: '\ud83d\udc80',
-    cost: 4,
+    cost: 5,
     rarity: 'uncommon',
   },
   mirror_shield: {
@@ -317,7 +317,7 @@ const RELICS = {
     desc: 'Your King is immune to the first check each battle.',
     flavor: '"Reflects the gaze. Returns the threat."',
     icon: '\ud83d\udee1',
-    cost: 6,
+    cost: 5,
     rarity: 'rare',
   },
 };
@@ -328,9 +328,9 @@ const RELIC_RARITY_ORDER = ['common', 'uncommon', 'rare'];
 // Shop costs
 const SHOP_COSTS = {
   piece_standard: 2,
-  piece_special: 4,
+  piece_special: 5,
   piece_rare: 6,
-  heal: 3,
+  heal: 4,
   reroll: 1,
 };
 

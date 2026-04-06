@@ -12,7 +12,7 @@ const I18n = {
       common: {
         on: 'ON',
         off: 'OFF',
-        back: '\u2190 BACK',
+        back: 'BACK',
         codex: 'CODEX',
       },
       title: {
@@ -180,7 +180,7 @@ const I18n = {
       common: {
         on: 'ON',
         off: 'OFF',
-        back: '\u2190 RETOUR',
+        back: 'RETOUR',
         codex: 'CODEX',
       },
       title: {

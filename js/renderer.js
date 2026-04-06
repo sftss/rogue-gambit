@@ -7,6 +7,14 @@ const Renderer = {
   effectsCtx: null,
   particles: [],
   animations: [],
+  showCoordinates: true,
+  showThreatMap: true,
+
+  setDisplayOptions(options) {
+    const opts = options || {};
+    if (typeof opts.showCoordinates === 'boolean') this.showCoordinates = opts.showCoordinates;
+    if (typeof opts.showThreatMap === 'boolean') this.showThreatMap = opts.showThreatMap;
+  },
 
   init() {
     this.canvas = document.getElementById('board-canvas');
@@ -32,6 +40,10 @@ const Renderer = {
         ctx.fillStyle = isLight ? COLORS.BOARD_LIGHT : COLORS.BOARD_DARK;
         ctx.fillRect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
       }
+    }
+
+    if (this.showThreatMap) {
+      this.drawThreatMap(board, gameState);
     }
 
     // Last move highlight
@@ -114,12 +126,41 @@ const Renderer = {
     });
 
     // Coordinate labels
-    ctx.font = '8px "Press Start 2P", monospace';
-    ctx.fillStyle = '#383050';
-    for (let i = 0; i < 8; i++) {
-      ctx.fillText(String.fromCharCode(97 + i), i * TILE_SIZE + TILE_SIZE - 12, CANVAS_SIZE - 4);
-      ctx.fillText(8 - i, 3, i * TILE_SIZE + 12);
+    if (this.showCoordinates) {
+      ctx.font = '8px "Press Start 2P", monospace';
+      ctx.fillStyle = '#383050';
+      for (let i = 0; i < 8; i++) {
+        ctx.fillText(String.fromCharCode(97 + i), i * TILE_SIZE + TILE_SIZE - 12, CANVAS_SIZE - 4);
+        ctx.fillText(8 - i, 3, i * TILE_SIZE + 12);
+      }
     }
+  },
+
+  drawThreatMap(board, gameState) {
+    if (!board || !gameState) return;
+
+    const threatenedBy = gameState.currentTeam === TEAM.WHITE ? TEAM.BLACK : TEAM.WHITE;
+    const threatCount = new Map();
+
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        const piece = board[r][c];
+        if (!piece || piece.team !== threatenedBy || piece.dissipated) continue;
+        const attacks = PieceMoves._getAttackSquares(piece, r, c, board, gameState);
+        attacks.forEach(a => {
+          if (a.row < 0 || a.row > 7 || a.col < 0 || a.col > 7) return;
+          const key = a.row + ',' + a.col;
+          threatCount.set(key, (threatCount.get(key) || 0) + 1);
+        });
+      }
+    }
+
+    threatCount.forEach((count, key) => {
+      const [row, col] = key.split(',').map(Number);
+      const alpha = Math.min(0.26, 0.08 + count * 0.03);
+      this.ctx.fillStyle = `rgba(255, 64, 64, ${alpha})`;
+      this.ctx.fillRect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    });
   },
 
   drawStatusIndicators(ctx, piece, x, y) {
