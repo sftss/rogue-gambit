@@ -11,10 +11,66 @@ window.addEventListener('DOMContentLoaded', () => {
   if (!settings.musicEnabled) Music.toggle();
   if (!settings.sfxEnabled) Music.toggleSFX();
 
+  const updateAudioToggleLabels = () => {
+    const musicBtn = document.getElementById('opt-music-toggle');
+    const sfxBtn = document.getElementById('opt-sfx-toggle');
+    if (musicBtn) musicBtn.textContent = Music.isMuted ? I18n.t('common.off') : I18n.t('common.on');
+    if (sfxBtn) sfxBtn.textContent = Music.isSFXMuted ? I18n.t('common.off') : I18n.t('common.on');
+  };
+
+  const updateLanguageButtons = () => {
+    document.querySelectorAll('.lang-choice').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.lang === I18n.getLanguage());
+    });
+  };
+
+  const refreshLocalizedRuntimeUI = (rerenderScreens) => {
+    const shouldRerender = rerenderScreens !== false;
+    I18n.applyToDOM();
+    updateAudioToggleLabels();
+    updateLanguageButtons();
+    GoldSystem.updateDisplay();
+    RelicSystem.updateDisplay();
+
+    if (!shouldRerender) return;
+
+    if (Game.currentScreen === 'title') {
+      Game.showTitle();
+    } else if (Game.currentScreen === 'draft') {
+      Draft.render();
+    } else if (Game.currentScreen === 'shop') {
+      Shop.renderShop();
+    } else if (Game.currentScreen === 'game' && Game.state) {
+      Game.updateUI();
+      if (Game.state.selectedPiece) {
+        const sel = Game.state.selectedPiece;
+        Game.updatePieceInfo(Game.board[sel.row][sel.col]);
+      } else {
+        Game.updatePieceInfo(null);
+      }
+    } else if (Game.currentScreen === 'codex') {
+      Codex.renderCodex();
+    }
+  };
+
+  I18n.onChange(refreshLocalizedRuntimeUI);
+
+  // Apply persisted settings to UI controls
+  document.getElementById('opt-music-vol').value = Math.round((settings.musicVolume || 0) * 100);
+  document.getElementById('opt-sfx-vol').value = Math.round((settings.sfxVolume || 0) * 100);
+  Draft.state.enemyDifficulty = settings.aiDifficulty || Draft.state.enemyDifficulty;
+  document.querySelectorAll('.option-choice[data-opt="ai"]').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.val) === Draft.state.enemyDifficulty);
+  });
+
+  // Initialize language before first render
+  I18n.setLanguage(settings.language || 'en', { persist: false, apply: false });
+  refreshLocalizedRuntimeUI(false);
+
   // ── TITLE SCREEN ──
   document.getElementById('btn-start').addEventListener('click', () => {
     if (Saves.hasSave()) {
-      if (confirm('Start a new run? This will delete your current save.')) {
+      if (confirm(I18n.t('confirm.startNewRun'))) {
         Game.startRun();
       }
     } else {
@@ -86,10 +142,10 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('btn-resign').addEventListener('click', () => {
-    if (confirm('Resign this game?')) {
+    if (confirm(I18n.t('confirm.resign'))) {
       Game.state.gameOver = true;
       Game.state.winner = TEAM.BLACK;
-      Game.state.winReason = 'Resigned.';
+      Game.state.winReason = I18n.t('game.reason.resigned');
       Game.showGameOver();
     }
   });
@@ -138,7 +194,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('opt-music-toggle').addEventListener('click', (e) => {
     Music.toggle();
-    e.target.textContent = Music.isMuted ? 'OFF' : 'ON';
+    e.target.textContent = Music.isMuted ? I18n.t('common.off') : I18n.t('common.on');
     const s = Saves.loadSettings();
     s.musicEnabled = !Music.isMuted;
     Saves.saveSettings(s);
@@ -146,10 +202,16 @@ window.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('opt-sfx-toggle').addEventListener('click', (e) => {
     Music.toggleSFX();
-    e.target.textContent = Music.isSFXMuted ? 'OFF' : 'ON';
+    e.target.textContent = Music.isSFXMuted ? I18n.t('common.off') : I18n.t('common.on');
     const s = Saves.loadSettings();
     s.sfxEnabled = !Music.isSFXMuted;
     Saves.saveSettings(s);
+  });
+
+  document.querySelectorAll('.lang-choice').forEach(btn => {
+    btn.addEventListener('click', () => {
+      I18n.setLanguage(btn.dataset.lang);
+    });
   });
 
   document.querySelectorAll('.option-choice[data-opt="ai"]').forEach(btn => {
@@ -165,7 +227,7 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('opt-delete-save').addEventListener('click', () => {
-    if (confirm('Delete save? This cannot be undone.')) {
+    if (confirm(I18n.t('confirm.deleteSave'))) {
       Saves.deleteSave();
       document.getElementById('btn-continue').style.display = 'none';
       document.getElementById('save-info').textContent = '';
@@ -193,6 +255,8 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   // ── INIT ──
+  updateAudioToggleLabels();
+  updateLanguageButtons();
   Game.showTitle();
   // Unlock standard pieces in codex
   ['pawn','rook','bishop','knight','queen','king'].forEach(t => Codex.unlock(t));

@@ -27,7 +27,13 @@ const Game = {
     if (saveInfo) {
       const info = Saves.getSaveInfo();
       if (info) {
-        saveInfo.textContent = `Saved: Round ${info.round} | ${info.wins} wins | ${info.gold}g | ${info.relicsCount} relics (${info.date})`;
+        saveInfo.textContent = I18n.t('game.saveInfo', {
+          round: info.round,
+          wins: info.wins,
+          gold: info.gold,
+          relics: info.relicsCount,
+          date: info.date,
+        });
       } else {
         saveInfo.textContent = '';
       }
@@ -112,7 +118,7 @@ const Game = {
     GoldSystem.resetBattleGold();
     GoldSystem.updateDisplay();
     this.updateUI();
-    this.addLog('Round ' + Draft.state.round + ' started!');
+    this.addLog(I18n.t('game.log.roundStarted', { round: Draft.state.round }));
 
     if (this.state.currentTeam === TEAM.BLACK) {
       setTimeout(() => this.doAITurn(), 500);
@@ -209,7 +215,7 @@ const Game = {
 
     if (move.type === 'unfreeze') {
       piece.frozen = false;
-      this.addLog(`${PIECE_INFO[piece.type]?.name || piece.type} unfreezes!`);
+      this.addLog(I18n.t('game.log.unfreezes', { piece: I18n.pieceName(piece.type) }));
       this.endTurn(); return;
     }
 
@@ -218,7 +224,7 @@ const Game = {
         piece.dissipated = true;
         this.state.dissipatedDjinns.push({ piece, row: fromRow, col: fromCol });
         this.board[fromRow][fromCol] = null;
-        this.addLog('Djinn dissipates...'); this.endTurn(); return;
+        this.addLog(I18n.t('game.log.djinnDissipates')); this.endTurn(); return;
       }
       if (piece.type === PT.ROCKETMAN && move.rocketMove) {
         piece.rocketUsed = true;
@@ -227,7 +233,7 @@ const Game = {
         piece.hasMoved = true;
         Renderer.spawnExplosionEffect(fromRow, fromCol);
         Music.playSFX('explode');
-        this.addLog('Rocketman blasts off!', 'important'); this.endTurn(); return;
+        this.addLog(I18n.t('game.log.rocketmanBlast'), 'important'); this.endTurn(); return;
       }
       if (piece.type === PT.SUMO_ROOK && move.pushTarget) {
         this.handleSumoPush(piece, fromRow, fromCol, move); this.endTurn(); return;
@@ -251,7 +257,10 @@ const Game = {
       if (captured) {
         Renderer.spawnCaptureEffect(captureRow, captureCol, '#f44');
         Music.playSFX('capture');
-        this.addLog(`${PIECE_INFO[piece.type]?.name} en passants ${PIECE_INFO[captured.type]?.name}!`);
+        this.addLog(I18n.t('game.log.enPassant', {
+          attacker: I18n.pieceName(piece.type),
+          target: I18n.pieceName(captured.type),
+        }));
         this._onCapture(piece, captured);
       }
     } else if (targetPiece && targetPiece.team !== piece.team && targetPiece.type !== PT.IRON_PAWN) {
@@ -259,7 +268,10 @@ const Game = {
       if (captured) {
         Renderer.spawnCaptureEffect(move.row, move.col, captured.team === TEAM.WHITE ? '#e8e0d0' : '#484058');
         Music.playSFX('capture');
-        this.addLog(`${PIECE_INFO[piece.type]?.name} captures ${PIECE_INFO[captured.type]?.name}!`);
+        this.addLog(I18n.t('game.log.captures', {
+          attacker: I18n.pieceName(piece.type),
+          target: I18n.pieceName(captured.type),
+        }));
         this._onCapture(piece, captured);
       }
     }
@@ -275,7 +287,7 @@ const Game = {
           if (killed) { Renderer.spawnCaptureEffect(bt.row, bt.col, '#f44'); this._onCapture(piece, killed); }
         } else {
           this.state.bladeRunnerMarks.push({ row: bt.row, col: bt.col, turn: this.state.turn });
-          this.addLog(`Blade Runner marks ${PIECE_INFO[target.type]?.name} for death!`, 'danger');
+          this.addLog(I18n.t('game.log.bladeMarks', { target: I18n.pieceName(target.type) }), 'danger');
         }
       }
     }
@@ -330,7 +342,7 @@ const Game = {
     if (piece.type === PT.HERO_PAWN) {
       const oppTeam = getOpponent(piece.team);
       if (PieceMoves.isInCheck(oppTeam, this.board, this.state)) {
-        this.addLog('Hero Pawn checks the king — promotes!', 'important');
+        this.addLog(I18n.t('game.log.heroPawnPromotes'), 'important');
         Renderer.spawnPromotionEffect(move.row, move.col);
         Music.playSFX('promote');
         this.handlePromotion(move.row, move.col, piece); return;
@@ -344,7 +356,7 @@ const Game = {
         this.state.dancerBonusTurn = true;
         this.state.dancerBonusTeam = piece.team;
         this.state.dancerMovesLeft = RelicSystem.getDancerBonusMoves();
-        this.addLog('Dancer checks the king! Extra moves incoming!', 'important');
+        this.addLog(I18n.t('game.log.dancerChecks'), 'important');
         Music.playSFX('check');
       }
     }
@@ -358,9 +370,9 @@ const Game = {
     // Promotion
     if (isPromotion(piece, move.row, this.state)) {
       if (piece.type === PT.GOLDEN_PAWN) {
-        this.addLog('GOLDEN PAWN PROMOTES — VICTORY!', 'important');
+        this.addLog(I18n.t('game.log.goldenPawnVictory'), 'important');
         Music.playSFX('promote');
-        this.state.gameOver = true; this.state.winner = piece.team; this.state.winReason = 'Golden Pawn promotion!';
+        this.state.gameOver = true; this.state.winner = piece.team; this.state.winReason = I18n.t('game.reason.goldenPawn');
         Renderer.spawnExplosionEffect(move.row, move.col);
         setTimeout(() => this.showGameOver(), 1200); return;
       }
@@ -407,10 +419,10 @@ const Game = {
     if (pushRow >= 0 && pushRow < 8 && pushCol >= 0 && pushCol < 8 && !this.board[pushRow][pushCol]) {
       this.board[move.pushTarget.row][move.pushTarget.col] = null;
       this.board[pushRow][pushCol] = target;
-      this.addLog(`Sumo Rook pushes ${PIECE_INFO[target.type]?.name}!`);
+      this.addLog(I18n.t('game.log.sumoPush', { target: I18n.pieceName(target.type) }));
     } else {
       const captured = removePiece(this.board, move.pushTarget.row, move.pushTarget.col, this.state);
-      if (captured) { Renderer.spawnCaptureEffect(move.pushTarget.row, move.pushTarget.col, '#a84'); this._onCapture(piece, captured); this.addLog(`Sumo Rook crushes ${PIECE_INFO[captured.type]?.name}!`); }
+      if (captured) { Renderer.spawnCaptureEffect(move.pushTarget.row, move.pushTarget.col, '#a84'); this._onCapture(piece, captured); this.addLog(I18n.t('game.log.sumoCrush', { target: I18n.pieceName(captured.type) })); }
     }
     this.state.lastMove = { from: { row: fromRow, col: fromCol }, to: { row: move.row, col: move.col }, piece };
   },
@@ -423,7 +435,7 @@ const Game = {
       Renderer.spawnExplosionEffect(fromRow, fromCol);
       Renderer.spawnExplosionEffect(move.duelTarget.row, move.duelTarget.col);
       Music.playSFX('explode');
-      this.addLog(`Gunslinger duel — both destroyed!`, 'danger');
+      this.addLog(I18n.t('game.log.gunslingerDuel'), 'danger');
     }
   },
 
@@ -441,7 +453,7 @@ const Game = {
           captured.splice(captured.indexOf(toResurrect), 1);
           Renderer.spawnPromotionEffect(backRank, c);
           Music.playSFX('promote');
-          this.addLog(`Pilgrim resurrects ${PIECE_INFO[toResurrect.type]?.name}!`, 'important'); break;
+          this.addLog(I18n.t('game.log.pilgrimResurrects', { target: I18n.pieceName(toResurrect.type) }), 'important'); break;
         }
       }
     }
@@ -454,7 +466,7 @@ const Game = {
       const target = pawns[Math.floor(Math.random() * pawns.length)];
       target.piece.type = PT.GOLDEN_PAWN;
       Renderer.spawnPromotionEffect(target.row, target.col);
-      this.addLog('Banker creates a Golden Pawn!', 'important');
+      this.addLog(I18n.t('game.log.bankerGolden'), 'important');
     }
   },
 
@@ -470,7 +482,7 @@ const Game = {
             hordeling.parentId = motherPiece.id;
             motherPiece.hordelings.push(hordeling.id);
             this.board[r][c] = hordeling;
-            this.addLog('Horde Mother spawns a Hordeling!');
+            this.addLog(I18n.t('game.log.hordeSpawn'));
             break;
           }
         }
@@ -479,7 +491,7 @@ const Game = {
   },
 
   handleFissionExplosion(row, col, piece) {
-    this.addLog('FISSION REACTOR EXPLODES!', 'danger');
+    this.addLog(I18n.t('game.log.fissionExplodes'), 'danger');
     Renderer.spawnExplosionEffect(row, col);
     Music.playSFX('explode');
     const enemyTeam = getOpponent(piece.team);
@@ -490,7 +502,7 @@ const Game = {
         if (target && target.team === enemyTeam) {
           removePiece(this.board, nr, nc, this.state);
           Renderer.spawnExplosionEffect(nr, nc);
-          this.addLog(`Explosion destroys ${PIECE_INFO[target.type]?.name}!`, 'danger');
+          this.addLog(I18n.t('game.log.explosionDestroys', { target: I18n.pieceName(target.type) }), 'danger');
         }
       }
     });
@@ -510,7 +522,7 @@ const Game = {
     if (targets.length > 0) {
       const target = targets[Math.floor(Math.random() * targets.length)];
       const zapped = removePiece(this.board, target.row, target.col, this.state);
-      if (zapped) { Renderer.spawnCaptureEffect(target.row, target.col, '#ff0'); Music.playSFX('electric'); this.addLog(`Electro Knight zaps ${PIECE_INFO[zapped.type]?.name}!`, 'important'); }
+      if (zapped) { Renderer.spawnCaptureEffect(target.row, target.col, '#ff0'); Music.playSFX('electric'); this.addLog(I18n.t('game.log.electroZaps', { target: I18n.pieceName(zapped.type) }), 'important'); }
     }
   },
 
@@ -521,7 +533,7 @@ const Game = {
       this.showPromotionModal(piece.team);
     } else {
       piece.type = PT.QUEEN;
-      this.addLog('Pawn promotes to Queen!', 'important');
+      this.addLog(I18n.t('game.log.pawnPromotesQueen'), 'important');
       Renderer.spawnPromotionEffect(row, col);
       this.processWarAutomators(); this.processBladeRunnerMarks(); this.endTurn();
     }
@@ -543,7 +555,7 @@ const Game = {
         const pos = this.state.promotionPending;
         const piece = this.board[pos.row][pos.col];
         piece.type = type; this.state.promotionPending = null;
-        this.addLog(`Pawn promotes to ${PIECE_INFO[type]?.name}!`, 'important');
+        this.addLog(I18n.t('game.log.pawnPromotes', { piece: I18n.pieceName(type) }), 'important');
         Renderer.spawnPromotionEffect(pos.row, pos.col);
         Music.playSFX('promote');
         this.processWarAutomators(); this.processBladeRunnerMarks(); this.endTurn();
@@ -579,7 +591,7 @@ const Game = {
         const target = this.board[mark.row][mark.col];
         if (target && target.type !== PT.IRON_PAWN) {
           const captured = removePiece(this.board, mark.row, mark.col, this.state);
-          if (captured) { Renderer.spawnCaptureEffect(mark.row, mark.col, '#f44'); this.addLog(`${PIECE_INFO[captured.type]?.name} falls to Blade Runner's mark!`, 'danger'); }
+          if (captured) { Renderer.spawnCaptureEffect(mark.row, mark.col, '#f44'); this.addLog(I18n.t('game.log.bladeFalls', { piece: I18n.pieceName(captured.type) }), 'danger'); }
         }
         toRemove.push(i);
       }
@@ -602,7 +614,7 @@ const Game = {
           target.frozen = true;
           Renderer.spawnFreezeEffect(nr, nc);
           Music.playSFX('freeze');
-          this.addLog(`${PIECE_INFO[target.type]?.name} is FROZEN!`, 'important');
+          this.addLog(I18n.t('game.log.isFrozen', { piece: I18n.pieceName(target.type) }), 'important');
         }
       });
     });
@@ -625,7 +637,7 @@ const Game = {
       if (this.state.dancerMovesLeft <= 0) {
         this.state.dancerBonusTurn = false; this.state.dancerBonusTeam = null;
       } else {
-        this.addLog('Dancer — bonus move!', 'important');
+        this.addLog(I18n.t('game.log.dancerBonus'), 'important');
         this.updateUI(); this.checkGameEnd(); return;
       }
     }
@@ -649,9 +661,9 @@ const Game = {
     const move = ChessAI.getBestMove(this.board, this.state, TEAM.BLACK, Math.max(1, difficulty));
     if (!move) {
       if (PieceMoves.isInCheck(TEAM.BLACK, this.board, this.state)) {
-        this.state.gameOver = true; this.state.winner = TEAM.WHITE; this.state.winReason = 'Checkmate!';
+        this.state.gameOver = true; this.state.winner = TEAM.WHITE; this.state.winReason = I18n.t('game.reason.checkmate');
       } else {
-        this.state.gameOver = true; this.state.winner = null; this.state.winReason = 'Stalemate!';
+        this.state.gameOver = true; this.state.winner = null; this.state.winReason = I18n.t('game.reason.stalemate');
       }
       this.showGameOver(); return;
     }
@@ -674,16 +686,16 @@ const Game = {
     }
     if (!hasLegalMoves) {
       if (PieceMoves.isInCheck(team, this.board, this.state)) {
-        this.state.gameOver = true; this.state.winner = getOpponent(team); this.state.winReason = 'Checkmate!';
+        this.state.gameOver = true; this.state.winner = getOpponent(team); this.state.winReason = I18n.t('game.reason.checkmate');
       } else {
-        this.state.gameOver = true; this.state.winner = null; this.state.winReason = 'Stalemate!';
+        this.state.gameOver = true; this.state.winner = null; this.state.winReason = I18n.t('game.reason.stalemate');
       }
       setTimeout(() => this.showGameOver(), 600); return;
     }
     const whiteKing = PieceMoves.findKing(TEAM.WHITE, this.board);
     const blackKing = PieceMoves.findKing(TEAM.BLACK, this.board);
-    if (!whiteKing) { this.state.gameOver = true; this.state.winner = TEAM.BLACK; this.state.winReason = 'White king destroyed!'; setTimeout(() => this.showGameOver(), 600); }
-    else if (!blackKing) { this.state.gameOver = true; this.state.winner = TEAM.WHITE; this.state.winReason = 'Black king destroyed!'; setTimeout(() => this.showGameOver(), 600); }
+    if (!whiteKing) { this.state.gameOver = true; this.state.winner = TEAM.BLACK; this.state.winReason = I18n.t('game.reason.whiteKingDestroyed'); setTimeout(() => this.showGameOver(), 600); }
+    else if (!blackKing) { this.state.gameOver = true; this.state.winner = TEAM.WHITE; this.state.winReason = I18n.t('game.reason.blackKingDestroyed'); setTimeout(() => this.showGameOver(), 600); }
   },
 
   // ============ GAME OVER ============
@@ -696,41 +708,41 @@ const Game = {
     const statsEl = document.getElementById('gameover-stats');
 
     if (won) {
-      resultEl.textContent = 'VICTORY!'; resultEl.className = 'win';
+      resultEl.textContent = I18n.t('gameover.victory'); resultEl.className = 'win';
       Music.play('victory');
       Draft.winRound();
     } else if (lost) {
-      resultEl.textContent = 'DEFEAT'; resultEl.className = 'lose';
+      resultEl.textContent = I18n.t('gameover.defeat'); resultEl.className = 'lose';
       Music.play('defeat');
       const prevented = RelicSystem.tryResurrection();
       if (prevented) {
-        this.addLog('Resurrection Stone activates — life spared!', 'important');
+        this.addLog(I18n.t('game.log.resurrectionStone'), 'important');
         Draft.state.lives = Math.max(Draft.state.lives, 1);
       } else {
         Draft.loseRound();
       }
     } else {
-      resultEl.textContent = 'DRAW'; resultEl.className = 'draw';
+      resultEl.textContent = I18n.t('gameover.draw'); resultEl.className = 'draw';
     }
 
     detailsEl.textContent = this.state.winReason;
 
     // Stats
     statsEl.innerHTML = `
-      <div class="gameover-stat"><div class="gameover-stat-val">${Draft.state.round}</div><div>ROUND</div></div>
-      <div class="gameover-stat"><div class="gameover-stat-val">${Draft.state.wins}</div><div>WINS</div></div>
-      <div class="gameover-stat"><div class="gameover-stat-val">${GoldSystem.gold}g</div><div>GOLD</div></div>
-      <div class="gameover-stat"><div class="gameover-stat-val">${RelicSystem.owned.length}</div><div>RELICS</div></div>
-      <div class="gameover-stat"><div class="gameover-stat-val">${this.state.turn}</div><div>TURNS</div></div>
+      <div class="gameover-stat"><div class="gameover-stat-val">${Draft.state.round}</div><div>${I18n.t('gameover.statRound')}</div></div>
+      <div class="gameover-stat"><div class="gameover-stat-val">${Draft.state.wins}</div><div>${I18n.t('gameover.statWins')}</div></div>
+      <div class="gameover-stat"><div class="gameover-stat-val">${GoldSystem.gold}g</div><div>${I18n.t('gameover.statGold')}</div></div>
+      <div class="gameover-stat"><div class="gameover-stat-val">${RelicSystem.owned.length}</div><div>${I18n.t('gameover.statRelics')}</div></div>
+      <div class="gameover-stat"><div class="gameover-stat-val">${this.state.turn}</div><div>${I18n.t('gameover.statTurns')}</div></div>
     `;
 
     this.showScreen('gameover');
 
     const continueBtn = document.getElementById('gameover-continue');
     if (won) {
-      continueBtn.textContent = 'GO TO SHOP'; continueBtn.style.display = 'block';
+      continueBtn.textContent = I18n.t('gameover.goToShop'); continueBtn.style.display = 'block';
     } else if (!Draft.isGameOver()) {
-      continueBtn.textContent = 'CONTINUE RUN'; continueBtn.style.display = 'block';
+      continueBtn.textContent = I18n.t('gameover.continueRun'); continueBtn.style.display = 'block';
     } else {
       continueBtn.style.display = 'none';
     }
@@ -740,7 +752,7 @@ const Game = {
   updateUI() {
     const turnEl = document.getElementById('turn-indicator');
     turnEl.className = this.state.currentTeam === TEAM.WHITE ? 'white-turn' : 'black-turn';
-    turnEl.textContent = this.state.currentTeam === TEAM.WHITE ? 'YOUR TURN' : 'ENEMY TURN...';
+    turnEl.textContent = this.state.currentTeam === TEAM.WHITE ? I18n.t('game.yourTurn') : I18n.t('game.enemyTurn');
     GoldSystem.updateDisplay();
     this.updateCapturedDisplay();
   },
@@ -763,17 +775,23 @@ const Game = {
     const typeEl = document.querySelector('#piece-info-panel .info-type');
     const descEl = document.querySelector('#piece-info-panel .info-desc');
     const statsEl = document.querySelector('#piece-info-panel .info-stats');
-    if (!piece) { descEl.textContent = 'Click a piece to see info'; return; }
-    const info = PIECE_INFO[piece.type];
+    if (!piece) {
+      nameEl.textContent = '';
+      typeEl.textContent = '';
+      descEl.textContent = I18n.t('game.clickPieceInfo');
+      statsEl.textContent = '';
+      return;
+    }
+    const info = I18n.pieceInfo(piece.type);
     nameEl.textContent = info?.name || piece.type;
-    typeEl.textContent = (PIECE_CATEGORY[piece.type] || '').toUpperCase();
+    typeEl.textContent = I18n.categoryName(PIECE_CATEGORY[piece.type], true);
     descEl.textContent = info?.desc || '';
     const stats = [];
-    if (piece.killCount) stats.push('Kills: ' + piece.killCount);
-    if (piece.totalMoved) stats.push('Dist: ' + piece.totalMoved + '/' + RelicSystem.getPilgrimThreshold());
-    if (piece.charged) stats.push('CHARGED!');
-    if (piece.frozen) stats.push('FROZEN');
-    if (piece.consecutiveMoves) stats.push('Combo: ' + piece.consecutiveMoves + '/' + RelicSystem.getElectroChargeThreshold());
+    if (piece.killCount) stats.push(I18n.t('game.statKills', { value: piece.killCount }));
+    if (piece.totalMoved) stats.push(I18n.t('game.statDist', { current: piece.totalMoved, max: RelicSystem.getPilgrimThreshold() }));
+    if (piece.charged) stats.push(I18n.t('game.statCharged'));
+    if (piece.frozen) stats.push(I18n.t('game.statFrozen'));
+    if (piece.consecutiveMoves) stats.push(I18n.t('game.statCombo', { current: piece.consecutiveMoves, max: RelicSystem.getElectroChargeThreshold() }));
     statsEl.textContent = stats.join(' | ');
   },
 

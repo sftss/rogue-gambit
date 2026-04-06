@@ -89,7 +89,7 @@ const GoldSystem = {
       el.textContent = this.gold + 'g';
     });
     document.querySelectorAll('.gold-interest').forEach(el => {
-      el.textContent = '+' + this.getInterest() + 'g interest';
+      el.textContent = I18n.t('gold.interest', { amount: this.getInterest() });
     });
   },
 };

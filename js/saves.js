@@ -105,13 +105,16 @@ const Saves = {
   getSaveInfo() {
     const data = this.load();
     if (!data) return null;
+    const locale = (typeof I18n !== 'undefined' && I18n && typeof I18n.getLocale === 'function')
+      ? I18n.getLocale()
+      : undefined;
     return {
       round: data.draft.round,
       wins: data.draft.wins,
       lives: data.draft.lives,
       gold: data.gold,
       relicsCount: (data.relics || []).length,
-      date: new Date(data.timestamp).toLocaleDateString(),
+      date: new Date(data.timestamp).toLocaleDateString(locale),
     };
   },
 
@@ -121,6 +124,7 @@ const Saves = {
     sfxVolume: 0.6,
     musicEnabled: true,
     sfxEnabled: true,
+    language: 'en',
     aiDifficulty: 2,
     showCoordinates: true,
     animationSpeed: 'normal',

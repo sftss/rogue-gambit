@@ -80,7 +80,7 @@ const Codex = {
 
       const name = document.createElement('div');
       name.className = 'codex-entry-name';
-      name.textContent = unlocked ? (PIECE_INFO[type]?.name || type) : '???';
+      name.textContent = unlocked ? I18n.pieceName(type) : I18n.t('codex.locked');
 
       card.appendChild(canvas);
       card.appendChild(name);
@@ -114,8 +114,8 @@ const Codex = {
     const panel = document.getElementById('codex-detail');
     if (!panel) return;
 
-    const info = PIECE_INFO[type];
-    const lore = (typeof LORE !== 'undefined') ? LORE[type] : null;
+    const info = I18n.pieceInfo(type);
+    const lore = I18n.loreInfo(type);
     const cat = PIECE_CATEGORY[type] || 'unknown';
 
     // Header
@@ -141,7 +141,7 @@ const Codex = {
 
     const catEl = document.createElement('div');
     catEl.className = 'codex-category';
-    catEl.textContent = cat.toUpperCase() + ' CLASS';
+    catEl.textContent = I18n.t('codex.classLabel', { category: I18n.categoryName(cat, true) });
 
     // Tags
     if (lore?.tags) {
@@ -166,7 +166,7 @@ const Codex = {
     // Mechanic description
     const mechanic = document.createElement('div');
     mechanic.className = 'codex-mechanic';
-    mechanic.innerHTML = '<span class="codex-section-title">ABILITY</span><br>' + (info?.desc || '');
+    mechanic.innerHTML = '<span class="codex-section-title">' + I18n.t('codex.ability') + '</span><br>' + (info?.desc || '');
     panel.appendChild(mechanic);
 
     // Lore text
@@ -190,7 +190,7 @@ const Codex = {
     if (owned) {
       const badge = document.createElement('div');
       badge.className = 'codex-owned-badge';
-      badge.textContent = '\u2714 In your army';
+      badge.textContent = I18n.t('codex.inYourArmy');
       panel.appendChild(badge);
     }
   },

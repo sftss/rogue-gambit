@@ -250,6 +250,7 @@ const Music = {
   sfxGain: null,
   currentTrack: null,
   currentLoop: null,
+  currentMusicBus: null,
   isMuted: false,
   isSFXMuted: false,
   volume: 0.4,
@@ -365,26 +366,38 @@ const Music = {
     const LOOKAHEAD = 0.15; // seconds ahead to schedule
     const INTERVAL  = 80;   // ms between scheduler ticks
 
-    const loopState = { active: true, nextTime: this.ctx.currentTime + 0.05, shouldLoop: loop };
+    const musicBus = this.ctx.createGain();
+    musicBus.gain.value = 1;
+    musicBus.connect(this.masterGain);
+
+    const loopState = {
+      active: true,
+      nextTime: this.ctx.currentTime + 0.05,
+      shouldLoop: loop,
+      bus: musicBus,
+      tickTimer: null,
+      endTimer: null,
+    };
     this.currentLoop = loopState;
+    this.currentMusicBus = musicBus;
 
     const tick = () => {
       if (!loopState.active) return;
       // Schedule up to LOOKAHEAD seconds ahead
       while (loopState.nextTime < this.ctx.currentTime + LOOKAHEAD + 0.5) {
         if (!loopState.active) break;
-        const dur = this._scheduleTrack(trackData, loopState.nextTime, this.masterGain);
+        const dur = this._scheduleTrack(trackData, loopState.nextTime, loopState.bus);
         if (!loopState.shouldLoop) {
           // non-looping: schedule stop after completion
           const endTime = loopState.nextTime + dur;
           const delay = (endTime - this.ctx.currentTime) * 1000 + 100;
-          setTimeout(() => { loopState.active = false; }, delay);
+          loopState.endTimer = setTimeout(() => { loopState.active = false; }, delay);
           return;
         }
         loopState.nextTime += dur;
       }
       if (loopState.active) {
-        setTimeout(tick, INTERVAL);
+        loopState.tickTimer = setTimeout(tick, INTERVAL);
       }
     };
     tick();
@@ -397,6 +410,11 @@ const Music = {
 
     // Resume context if suspended (browser autoplay policy)
     if (this.ctx.state === 'suspended') this.ctx.resume();
+
+    // Prevent duplicate scheduling when requesting the same active track.
+    if (this.currentTrack === trackName && this.currentLoop && this.currentLoop.active) {
+      return;
+    }
 
     this.stop();
 
@@ -421,10 +439,31 @@ const Music = {
   },
 
   stop() {
-    if (this.currentLoop) {
-      this.currentLoop.active = false;
-      this.currentLoop = null;
+    const loopState = this.currentLoop;
+    if (loopState) {
+      loopState.active = false;
+      if (loopState.tickTimer) clearTimeout(loopState.tickTimer);
+      if (loopState.endTimer) clearTimeout(loopState.endTimer);
+
+      // Fade out old music bus quickly so pre-scheduled notes become inaudible.
+      if (this.ctx && loopState.bus) {
+        const now = this.ctx.currentTime;
+        try {
+          loopState.bus.gain.cancelScheduledValues(now);
+          loopState.bus.gain.setValueAtTime(loopState.bus.gain.value, now);
+          loopState.bus.gain.linearRampToValueAtTime(0, now + 0.06);
+        } catch {
+          // no-op
+        }
+        setTimeout(() => {
+          try { loopState.bus.disconnect(); } catch {
+            // no-op
+          }
+        }, 120);
+      }
     }
+    this.currentLoop = null;
+    this.currentMusicBus = null;
     this.currentTrack = null;
   },
 

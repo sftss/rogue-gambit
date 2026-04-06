@@ -149,7 +149,7 @@ const Shop = {
   // ── Render ────────────────────────────────────────
   renderShop(goldEarned) {
     // Header
-    document.getElementById('shop-round').textContent = 'Round ' + Draft.state.round + ' Shop';
+    document.getElementById('shop-round').textContent = I18n.t('shop.roundTitle', { round: Draft.state.round });
 
     this._updateLivesDisplay();
     GoldSystem.updateDisplay();
@@ -159,7 +159,12 @@ const Shop = {
     if (banner) {
       if (goldEarned !== undefined && goldEarned > 0) {
         const interest = GoldSystem.getInterest();
-        banner.textContent = `+${goldEarned}g earned (${GOLD.WIN_BASE}g win + ${Draft.state.round - 1}g round bonus + ${interest}g interest)`;
+        banner.textContent = I18n.t('shop.earnedBanner', {
+          earned: goldEarned,
+          winBase: GOLD.WIN_BASE,
+          roundBonus: Draft.state.round - 1,
+          interest,
+        });
         banner.style.display = 'block';
       } else {
         banner.style.display = 'none';
@@ -193,7 +198,7 @@ const Shop = {
     if (this.currentRelics.length === 0) {
       const msg = document.createElement('div');
       msg.className = 'shop-empty';
-      msg.textContent = 'No relics available — you own them all!';
+      msg.textContent = I18n.t('shop.noRelics');
       relicsContainer.appendChild(msg);
     }
 
@@ -201,7 +206,7 @@ const Shop = {
     const rerollBtn = document.getElementById('shop-reroll');
     if (rerollBtn) {
       const cost = GoldSystem.getRerollCost();
-      rerollBtn.textContent = `REROLL (${cost}g)`;
+      rerollBtn.textContent = I18n.t('shop.reroll', { cost });
       rerollBtn.disabled = !GoldSystem.canAfford(cost);
     }
 
@@ -219,24 +224,24 @@ const Shop = {
 
     const name = document.createElement('div');
     name.className = 'card-name';
-    name.textContent = PIECE_INFO[offer.pt]?.name || offer.pt;
+    name.textContent = I18n.pieceName(offer.pt);
 
     const cat = document.createElement('div');
     cat.className = 'card-category';
-    cat.textContent = offer.cat;
+    cat.textContent = I18n.categoryName(offer.cat);
 
     const desc = document.createElement('div');
     desc.className = 'card-desc';
-    desc.textContent = PIECE_INFO[offer.pt]?.desc || '';
+    desc.textContent = I18n.pieceDesc(offer.pt);
 
     const replaces = document.createElement('div');
     replaces.className = 'card-replaces';
     const currentPiece = Draft.state.playerPieces[offer.replaceArray][offer.replaceIndex];
-    replaces.textContent = 'Replaces: ' + (PIECE_INFO[currentPiece]?.name || currentPiece);
+    replaces.textContent = I18n.t('draft.replaces', { name: I18n.pieceName(currentPiece), pos: offer.replaceIndex + 1 });
 
     const buyBtn = document.createElement('button');
     buyBtn.className = 'btn btn-small btn-gold';
-    buyBtn.textContent = offer.bought ? 'SOLD' : offer.cost + 'g';
+    buyBtn.textContent = offer.bought ? I18n.t('shop.sold') : offer.cost + 'g';
     buyBtn.disabled = offer.bought || !GoldSystem.canAfford(offer.cost);
     buyBtn.addEventListener('click', () => this.buyItem(offer.id));
 
@@ -261,15 +266,15 @@ const Shop = {
 
     const name = document.createElement('div');
     name.className = 'card-name';
-    name.textContent = 'Restore Life';
+    name.textContent = I18n.t('shop.restoreLifeName');
 
     const desc = document.createElement('div');
     desc.className = 'card-desc';
-    desc.textContent = 'Recover 1 lost life. Keep fighting.';
+    desc.textContent = I18n.t('shop.restoreLifeDesc');
 
     const buyBtn = document.createElement('button');
     buyBtn.className = 'btn btn-small btn-danger';
-    buyBtn.textContent = offer.bought ? 'HEALED' : offer.cost + 'g';
+    buyBtn.textContent = offer.bought ? I18n.t('shop.healed') : offer.cost + 'g';
     buyBtn.disabled = offer.bought || !GoldSystem.canAfford(offer.cost);
     buyBtn.addEventListener('click', () => this.buyItem(offer.id));
 
@@ -282,6 +287,7 @@ const Shop = {
   },
 
   _createRelicCard(relic) {
+    const relicInfo = I18n.relicInfo(relic.id) || relic;
     const card = document.createElement('div');
     card.className = 'shop-card shop-card-relic' + (!GoldSystem.canAfford(relic.cost) ? ' cant-afford' : '');
     card.setAttribute('data-rarity', relic.rarity);
@@ -292,19 +298,19 @@ const Shop = {
 
     const name = document.createElement('div');
     name.className = 'card-name';
-    name.textContent = relic.name;
+    name.textContent = relicInfo.name;
 
     const rarityEl = document.createElement('div');
     rarityEl.className = 'card-category rarity-' + relic.rarity;
-    rarityEl.textContent = relic.rarity;
+    rarityEl.textContent = I18n.rarityName(relic.rarity);
 
     const desc = document.createElement('div');
     desc.className = 'card-desc';
-    desc.textContent = relic.desc;
+    desc.textContent = relicInfo.desc;
 
     const flavor = document.createElement('div');
     flavor.className = 'card-flavor';
-    flavor.textContent = relic.flavor || '';
+    flavor.textContent = relicInfo.flavor || '';
 
     const buyBtn = document.createElement('button');
     buyBtn.className = 'btn btn-small btn-gold';

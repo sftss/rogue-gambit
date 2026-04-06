@@ -226,11 +226,16 @@ const Draft = {
     const container = document.getElementById('draft-screen');
 
     // Header info
-    document.getElementById('draft-round').textContent = `Round ${this.state.round}`;
+    document.getElementById('draft-round').textContent = I18n.t('draft.round', { round: this.state.round });
     document.getElementById('draft-lives').innerHTML =
       '<span class="heart">' + '\u2764'.repeat(this.state.lives) + '</span>' +
       '\u2661'.repeat(Math.max(0, STARTING_LIVES - this.state.lives));
-    document.getElementById('draft-info').textContent = `Wins: ${this.state.wins} | Pick up to ${DRAFT_PICKS} pieces`;
+    document.getElementById('draft-info').textContent = I18n.t('draft.info', {
+      wins: this.state.wins,
+      count: DRAFT_PICKS,
+    });
+    const picksHint = document.getElementById('draft-picks-hint');
+    if (picksHint) picksHint.textContent = I18n.t('draft.chooseHint', { count: DRAFT_PICKS });
 
     // Board preview
     const previewCanvas = document.getElementById('draft-board-preview');
@@ -254,20 +259,20 @@ const Draft = {
 
       const name = document.createElement('div');
       name.className = 'card-name';
-      name.textContent = PIECE_INFO[offer.type]?.name || offer.type;
+      name.textContent = I18n.pieceName(offer.type);
 
       const category = document.createElement('div');
       category.className = 'card-category';
-      category.textContent = offer.category;
+      category.textContent = I18n.categoryName(offer.category);
 
       const desc = document.createElement('div');
       desc.className = 'card-desc';
-      desc.textContent = PIECE_INFO[offer.type]?.desc || '';
+      desc.textContent = I18n.pieceDesc(offer.type);
 
       const replaces = document.createElement('div');
       replaces.className = 'card-replaces';
-      const replaceName = PIECE_INFO[offer.replacesType]?.name || offer.replacesType;
-      replaces.textContent = `Replaces: ${replaceName} (pos ${offer.replaceIndex + 1})`;
+      const replaceName = I18n.pieceName(offer.replacesType);
+      replaces.textContent = I18n.t('draft.replaces', { name: replaceName, pos: offer.replaceIndex + 1 });
 
       card.appendChild(canvas);
       card.appendChild(name);

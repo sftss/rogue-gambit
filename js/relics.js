@@ -125,7 +125,7 @@ const RelicSystem = {
 
     container.innerHTML = '';
     this.owned.forEach(id => {
-      const relic = RELICS[id];
+      const relic = I18n.relicInfo(id);
       if (!relic) return;
 
       const el = document.createElement('div');
@@ -180,6 +180,7 @@ const RelicSystem = {
 
 // ── Tooltip helpers ──────────────────────────────────
 function showRelicTooltip(relic, x, y) {
+  const relicInfo = I18n.relicInfo(relic.id) || relic;
   let tt = document.getElementById('relic-tooltip');
   if (!tt) {
     tt = document.createElement('div');
@@ -187,7 +188,7 @@ function showRelicTooltip(relic, x, y) {
     tt.className = 'tooltip';
     document.body.appendChild(tt);
   }
-  tt.innerHTML = `<div class="tt-name">${relic.icon} ${relic.name}</div>${relic.desc}<br><em>${relic.flavor || ''}</em>`;
+  tt.innerHTML = `<div class="tt-name">${relicInfo.icon} ${relicInfo.name}</div>${relicInfo.desc}<br><em>${relicInfo.flavor || ''}</em>`;
   tt.style.left = (x + 12) + 'px';
   tt.style.top = (y - 10) + 'px';
   tt.style.display = 'block';
