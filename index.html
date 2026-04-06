@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rogue Gambit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ============ TITLE SCREEN ============ -->
+  <div id="title-screen" class="screen active">
+    <div class="title-art">
+      <h1 class="game-title-big">ROGUE<br><span class="title-accent">GAMBIT</span></h1>
+      <div class="title-tagline">Draft. Battle. Survive.</div>
+    </div>
+    <div class="title-buttons">
+      <button id="btn-start" class="btn btn-large">NEW RUN</button>
+      <button id="btn-continue" class="btn btn-large btn-gold" style="display:none">CONTINUE</button>
+      <button id="btn-codex" class="btn btn-medium">CODEX</button>
+      <button id="btn-options" class="btn btn-medium">OPTIONS</button>
+    </div>
+    <div id="save-info" class="save-info"></div>
+    <div class="title-footer">v0.1 — use arrow keys or click to navigate</div>
+  </div>
+
+  <!-- ============ DRAFT SCREEN ============ -->
+  <div id="draft-screen" class="screen">
+    <div id="draft-header">
+      <div id="draft-round">Round 1</div>
+      <div class="header-center">
+        <span class="gold-amount">0g</span>
+        <span class="gold-interest"></span>
+      </div>
+      <div id="draft-lives"></div>
+    </div>
+    <div id="draft-top">
+      <canvas id="draft-board-preview"></canvas>
+      <div id="draft-relics-panel">
+        <div class="panel-title">YOUR RELICS</div>
+        <div id="relics-display" class="relics-row"></div>
+      </div>
+    </div>
+    <div id="draft-picks-container">
+      <div id="draft-picks-title">Choose your pieces <span class="draft-picks-hint">(up to 4)</span></div>
+      <div id="draft-picks"></div>
+    </div>
+    <div id="draft-info"></div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
+      <button id="draft-confirm" class="btn btn-gold">CONFIRM PICKS</button>
+      <button id="draft-skip" class="btn btn-small">SKIP</button>
+      <button id="btn-draft-codex" class="btn btn-small">CODEX</button>
+    </div>
+  </div>
+
+  <!-- ============ SHOP SCREEN ============ -->
+  <div id="shop-screen" class="screen">
+    <div id="shop-header">
+      <div id="shop-round">Shop</div>
+      <div class="header-center">
+        <span id="gold-display" class="gold-amount gold-display-large">0g</span>
+        <span class="gold-interest"></span>
+      </div>
+      <div id="shop-lives"></div>
+    </div>
+
+    <div id="shop-earned-banner" class="shop-banner" style="display:none"></div>
+
+    <div id="shop-body">
+      <div id="shop-left">
+        <div class="shop-section-title">PIECES FOR SALE</div>
+        <div id="shop-pieces" class="shop-cards"></div>
+
+        <div class="shop-section-title" style="margin-top:20px;">RELICS</div>
+        <div id="shop-relics" class="shop-cards"></div>
+      </div>
+
+      <div id="shop-right">
+        <div class="shop-section-title">YOUR ARMY</div>
+        <canvas id="shop-board-preview"></canvas>
+        <div class="shop-section-title" style="margin-top:12px;">YOUR RELICS</div>
+        <div id="relics-display" class="relics-row"></div>
+      </div>
+    </div>
+
+    <div id="shop-footer">
+      <button id="shop-reroll" class="btn btn-small">REROLL (1g)</button>
+      <button id="shop-leave" class="btn btn-gold">CONTINUE TO DRAFT</button>
+    </div>
+  </div>
+
+  <!-- ============ GAME SCREEN ============ -->
+  <div id="game-screen" class="screen">
+    <div id="game-top-bar">
+      <div id="turn-indicator" class="white-turn">Your Turn</div>
+      <div class="gold-amount" id="game-gold">0g</div>
+      <div id="game-relics-mini">
+        <div id="relics-display" class="relics-row-mini"></div>
+      </div>
+    </div>
+    <div id="game-main">
+      <div id="board-container">
+        <canvas id="board-canvas"></canvas>
+        <canvas id="effects-canvas"></canvas>
+      </div>
+      <div id="game-sidebar">
+        <div id="piece-info-panel">
+          <div class="info-name"></div>
+          <div class="info-type"></div>
+          <div class="info-desc">Click a piece to see info</div>
+          <div class="info-stats"></div>
+        </div>
+
+        <div id="captured-pieces">
+          <div class="panel-title">CAPTURED</div>
+          <div class="captured-row" id="captured-white"></div>
+          <div class="captured-row" id="captured-black"></div>
+        </div>
+
+        <div id="game-log"></div>
+
+        <div id="game-buttons">
+          <button class="btn btn-small btn-danger" id="btn-resign">RESIGN</button>
+          <button class="btn btn-small" id="btn-game-codex">CODEX</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CODEX SCREEN ============ -->
+  <div id="codex-screen" class="screen">
+    <div id="codex-header">
+      <button id="codex-back" class="btn btn-small">&larr; BACK</button>
+      <div class="codex-title-header">CODEX</div>
+      <button id="codex-unlock-all" class="btn btn-small" style="font-size:7px">UNLOCK ALL</button>
+    </div>
+    <div id="codex-filters">
+      <button class="codex-filter-btn active" data-filter="all">ALL</button>
+      <button class="codex-filter-btn" data-filter="pawn">PAWNS</button>
+      <button class="codex-filter-btn" data-filter="rook">ROOKS</button>
+      <button class="codex-filter-btn" data-filter="bishop">BISHOPS</button>
+      <button class="codex-filter-btn" data-filter="knight">KNIGHTS</button>
+      <button class="codex-filter-btn" data-filter="queen">QUEENS</button>
+      <button class="codex-filter-btn" data-filter="king">KINGS</button>
+    </div>
+    <div id="codex-body">
+      <div id="codex-list"></div>
+      <div id="codex-detail">
+        <div style="color:#4a3a60; font-size:10px; padding:20px; text-align:center;">Select a piece to view its entry</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ OPTIONS SCREEN ============ -->
+  <div id="options-screen" class="screen">
+    <button id="options-back" class="btn btn-small">&larr; BACK</button>
+    <h2 class="options-title">OPTIONS</h2>
+    <div id="options-body">
+      <div class="option-row">
+        <label>Music Volume</label>
+        <input type="range" id="opt-music-vol" min="0" max="100" value="40" class="option-slider">
+        <button id="opt-music-toggle" class="btn btn-small">ON</button>
+      </div>
+      <div class="option-row">
+        <label>SFX Volume</label>
+        <input type="range" id="opt-sfx-vol" min="0" max="100" value="60" class="option-slider">
+        <button id="opt-sfx-toggle" class="btn btn-small">ON</button>
+      </div>
+      <div class="option-row">
+        <label>AI Difficulty</label>
+        <div class="option-choices">
+          <button class="btn btn-small option-choice" data-opt="ai" data-val="1">EASY</button>
+          <button class="btn btn-small option-choice active" data-opt="ai" data-val="2">MEDIUM</button>
+          <button class="btn btn-small option-choice" data-opt="ai" data-val="3">HARD</button>
+        </div>
+      </div>
+      <div class="option-row">
+        <label>Coordinates</label>
+        <button id="opt-coords" class="btn btn-small">ON</button>
+      </div>
+      <div class="option-row option-danger">
+        <label>Delete Save</label>
+        <button id="opt-delete-save" class="btn btn-small btn-danger">DELETE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PROMOTION MODAL ============ -->
+  <div id="promotion-modal">
+    <div id="promotion-choices">
+      <h3>Promote Pawn</h3>
+      <div id="promotion-pieces"></div>
+    </div>
+  </div>
+
+  <!-- ============ GAME OVER SCREEN ============ -->
+  <div id="gameover-screen" class="screen">
+    <div id="gameover-result"></div>
+    <div id="gameover-details"></div>
+    <div id="gameover-stats" class="gameover-stats"></div>
+    <div id="gameover-buttons">
+      <button id="gameover-continue" class="btn btn-gold">CONTINUE RUN</button>
+      <button id="gameover-newrun" class="btn">NEW RUN</button>
+      <button id="gameover-title" class="btn btn-small">TITLE</button>
+    </div>
+  </div>
+
+  <!-- ============ RELIC TOOLTIP ============ -->
+  <div id="relic-tooltip" class="tooltip" style="display:none"></div>
+
+  <!-- ============ SCRIPTS ============ -->
+  <script src="js/constants.js"></script>
+  <script src="js/sprites.js"></script>
+  <script src="js/board.js"></script>
+  <script src="js/pieces.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/gold.js"></script>
+  <script src="js/relics.js"></script>
+  <script src="js/saves.js"></script>
+  <script src="js/draft.js"></script>
+  <script src="js/shop.js"></script>
+  <script src="js/lore.js"></script>
+  <script src="js/codex.js"></script>
+  <script src="js/music.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
