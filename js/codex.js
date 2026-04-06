@@ -164,6 +164,12 @@ const Codex = {
     }
 
     // Mechanic description
+    const gameplay = document.createElement('div');
+    gameplay.className = 'codex-gameplay';
+    gameplay.innerHTML = '<span class="codex-section-title">' + I18n.t('codex.howToPlay') + '</span><br>' + I18n.t('codex.howToPlayBody');
+    panel.appendChild(gameplay);
+
+    // Mechanic description
     const mechanic = document.createElement('div');
     mechanic.className = 'codex-mechanic';
     mechanic.innerHTML = '<span class="codex-section-title">' + I18n.t('codex.ability') + '</span><br>' + (info?.desc || '');

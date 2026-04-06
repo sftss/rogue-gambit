@@ -251,6 +251,7 @@ body {
 .codex-tags { display: flex; gap: 6px; flex-wrap: wrap; }
 .codex-tag { font-size: 6px; padding: 3px 8px; background: #2a1a40; color: #a898c0; border: 1px solid #4a3a60; }
 .codex-section-title { font-size: 7px; color: #6858a0; letter-spacing: 2px; }
+.codex-gameplay { font-size: 8px; color: #b8b0d0; line-height: 1.8; background: #151221; padding: 10px; border-left: 3px solid #3a4f7a; }
 .codex-mechanic { font-size: 8px; color: #c8c0d8; line-height: 1.8; background: #12101a; padding: 10px; border-left: 3px solid #4a3a60; }
 .codex-lore { font-size: 8px; color: #a898c0; line-height: 2; font-style: italic; }
 .codex-flavor { font-size: 8px; color: #6858a0; font-style: italic; padding: 8px 12px; border-left: 3px solid #806020; background: #1a1608; }

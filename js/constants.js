@@ -53,12 +53,12 @@ CAT_KING.forEach(t => PIECE_CATEGORY[t] = 'king');
 
 // Piece display info
 const PIECE_INFO = {
-  [PT.PAWN]: { name: 'Pawn', desc: 'Standard pawn.' },
-  [PT.ROOK]: { name: 'Rook', desc: 'Standard rook.' },
-  [PT.BISHOP]: { name: 'Bishop', desc: 'Standard bishop.' },
-  [PT.KNIGHT]: { name: 'Knight', desc: 'Standard knight.' },
-  [PT.QUEEN]: { name: 'Queen', desc: 'Standard queen.' },
-  [PT.KING]: { name: 'King', desc: 'Standard king.' },
+  [PT.PAWN]: { name: 'Pawn', desc: 'Moves 1 square forward (2 on first move), captures diagonally, and promotes on the last rank.' },
+  [PT.ROOK]: { name: 'Rook', desc: 'Moves any number of squares orthogonally. Dominates open files and ranks.' },
+  [PT.BISHOP]: { name: 'Bishop', desc: 'Moves any number of squares diagonally. Stays on one color for the whole battle.' },
+  [PT.KNIGHT]: { name: 'Knight', desc: 'Moves in an L-shape and jumps over pieces. Excellent in crowded positions.' },
+  [PT.QUEEN]: { name: 'Queen', desc: 'Combines rook and bishop movement. The most versatile long-range attacker.' },
+  [PT.KING]: { name: 'King', desc: 'Moves 1 square in any direction. If your king is destroyed, you lose the battle.' },
   [PT.BLUEPRINT]: { name: 'Blueprint', desc: 'Transforms into the pawn to its left at game start.' },
   [PT.EPEE_PAWN]: { name: 'Ep\u00e9e Pawn', desc: 'Can en passant any pawn anywhere on the board.' },
   [PT.GOLDEN_PAWN]: { name: 'Golden Pawn', desc: 'If this pawn promotes, win the game!' },
